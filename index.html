@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>infantry online</title>
+		<link href='https://fonts.googleapis.com/css?family=Inconsolata:400,700' rel='stylesheet' type='text/css'>
+		<style type="text/css">
+			/* http://meyerweb.com/eric/tools/css/reset/
+			   v2.0 | 20110126
+			   License: none (public domain)
+			*/
+
+			html, body, div, span, applet, object, iframe,
+			h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+			a, abbr, acronym, address, big, cite, code,
+			del, dfn, em, img, ins, kbd, q, s, samp,
+			small, strike, strong, sub, sup, tt, var,
+			b, u, i, center,
+			dl, dt, dd, ol, ul, li,
+			fieldset, form, label, legend,
+			table, caption, tbody, tfoot, thead, tr, th, td,
+			article, aside, canvas, details, embed,
+			figure, figcaption, footer, header, hgroup,
+			menu, nav, output, ruby, section, summary,
+			time, mark, audio, video {
+				margin: 0;
+				padding: 0;
+				border: 0;
+				font-size: 100%;
+				font: inherit;
+				vertical-align: baseline;
+			}
+			/* HTML5 display-role reset for older browsers */
+			article, aside, details, figcaption, figure,
+			footer, header, hgroup, menu, nav, section {
+				display: block;
+			}
+			body {
+				line-height: 1;
+			}
+			ol, ul {
+				list-style: none;
+			}
+			blockquote, q {
+				quotes: none;
+			}
+			blockquote:before, blockquote:after,
+			q:before, q:after {
+				content: '';
+				content: none;
+			}
+			table {
+				border-collapse: collapse;
+				border-spacing: 0;
+			}
+
+			body {
+				font-family: 'Inconsolata', monospace;
+				background-color: #333333;
+				font-size: 13px;
+				color: #f4f4f4;
+			}
+
+			.container {
+				margin: 0 auto;
+				max-width: 100%;
+				width: 450px;
+				padding: 150px 0;
+			}
+
+			.header {
+				color: #f4f4f4;
+				font-size: 54px;
+				font-weight: 400;
+				text-align: center;
+			}
+
+			.zone-data {
+				max-width: 80%;
+				width: 350px;
+				margin: 20px auto;
+				text-transform: lowercase;
+			}
+
+			.table-header td {
+				font-weight: 700;
+				padding-bottom: 8px;
+			}
+
+			.table-entry td {
+				padding-bottom: 3px;
+			}
+
+			.sortable {
+				cursor: pointer;
+				padding: 8px 0;
+			}
+
+			.zone-pop {
+				font-weight: 700;
+				color: #43b94f;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<h1 class="header">Infantry Online</h1>
+			<table class="zone-data">
+				<thead>
+					<tr class="table-header">
+						<td style="width: 15%; padding-right: 10px;"><span class="sortable" data-bind="click: sortBy.bind($data, 'category')">Category</span></td>
+						<td><span class="sortable" data-bind="click: sortBy.bind($data, 'title')">Name</span></td>
+						<td style="width: 15%; text-align: right;"><span class="sortable" data-bind="click: sortBy.bind($data, 'population')">Population</span></td>
+					</tr>
+				</thead>
+				<tbody data-bind="foreach: zones">
+					<tr class="table-entry">
+						<td data-bind="text: category" style="text-align: right; padding-right: 10px;">Refreshing...</td>
+						<td data-bind="text: title"></td>
+						<td data-bind="text: population" style="text-align: right;" class="zone-pop">??</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	</body>
+	<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
+	<!-- nanoajax.js | https://github.com/yanatan16/nanoajax/blob/master/nanoajax.min.js -->
+	<script type="text/javascript">
+	!function(e,t){function n(){if(t.XMLHttpRequest)return new t.XMLHttpRequest;try{return new t.ActiveXObject("MSXML2.XMLHTTP.3.0")}catch(e){}throw new Error("no xmlhttp request able to be created")}function r(e,t,n){e[t]=e[t]||n}t.nanoajax=e,e.ajax=function(e,t){"string"==typeof e&&(e={url:e});var a=e.headers||{},o=e.body,u=e.method||(o?"POST":"GET"),i=e.withCredentials||!1,s=n();s.onreadystatechange=function(){4==s.readyState&&t(s.status,s.responseText,s)},o&&(r(a,"X-Requested-With","XMLHttpRequest"),r(a,"Content-Type","application/x-www-form-urlencoded")),s.open(u,e.url,!0),s.withCredentials=i;for(var c in a)s.setRequestHeader(c,a[c]);s.send(o)}}({},function(){return this}());
+	</script>
+	<script type="text/javascript">
+
+		function ZoneListViewModel() {
+			var self = this;
+
+			self.zonelistUrl = 'http://crossorigin.me/http://infdir1.aaerox.com/directory/notz';
+			self.zones = ko.observableArray([{
+				category: 'Refreshing...',
+				title: '',
+				population: '??'
+			}]);
+			self.sort = {
+				by: 'title',
+				ascending: true
+			}
+
+			self.getZones = function() {
+				nanoajax.ajax(self.zonelistUrl, function(code, res) {
+					if (code === 200) {
+						var zones = JSON.parse(res);
+						var castZones = [];
+						for (var i = zones.length - 1; i >= 0; i--) {
+							castZones.push(new Zone(zones[i]));
+						}
+						self.zones(castZones);
+						self.sortBy('population', true);
+					} else {
+						self.zones([{
+							category: 'Error refreshing zonelist',
+							title: '',
+							population: 'code ' + code
+						}]);
+					}
+				});
+			};
+
+			self.sortBy = function(field, ascending) {
+				if (typeof ascending !== 'boolean') {
+					ascending = !self.sort.ascending;
+				}
+				self.sort.by = field;
+				self.sort.ascending = ascending;
+
+				self.zones(self.zones().sort(function(a, b) {
+					if (self.sort.ascending) {
+						return a[field] < b[field];
+					} else {
+						return a[field] > b[field];
+					}
+				}));
+			};
+
+			self.getZones();
+		}
+
+		function Zone(raw) {
+			var self = this;
+			self.fullTitle = raw.Title;
+			self.population = raw.PlayerCount;
+			self.title = (function() {
+				if (self.fullTitle.indexOf('] ') !== -1) {
+					return self.fullTitle.split('] ')[1];
+				}
+
+				return self.fullTitle;
+			})();
+			self.category = (function() {
+				if (self.fullTitle.indexOf('[I:') !== -1) {
+					return self.fullTitle.split('[I:')[1].split(']')[0];
+				}
+
+				return '-';
+			})();
+		}
+
+		ko.applyBindings(new ZoneListViewModel());
+
+	</script>
+</html>
