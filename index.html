@@ -139,9 +139,9 @@
 				population: '??'
 			}]);
 			self.sort = {
-				by: 'title',
+				by: 'population',
 				ascending: true
-			}
+			};
 
 			self.getZones = function() {
 				nanoajax.ajax(self.zonelistUrl, function(code, res) {
@@ -152,7 +152,9 @@
 							castZones.push(new Zone(zones[i]));
 						}
 						self.zones(castZones);
-						self.sortBy('population', true);
+						self.sortBy(self.sort.by, self.sort.ascending);
+
+						setTimeout(self.getZones, 5000);
 					} else {
 						self.zones([{
 							category: 'Error refreshing zonelist',
@@ -172,9 +174,9 @@
 
 				self.zones(self.zones().sort(function(a, b) {
 					if (self.sort.ascending) {
-						return a[field] < b[field];
+						return a[self.sort.by] < b[self.sort.by];
 					} else {
-						return a[field] > b[field];
+						return a[self.sort.by] > b[self.sort.by];
 					}
 				}));
 			};
